@@ -1,0 +1,118 @@
+﻿@model imcd_alert_sync_pro.Models.AlertsModel
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            margin-top: 0.5px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .no-alerts {
+            text-align: center;
+            color: #868e96;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Indexed Alerts</h1>
+
+        <div class="table-responsive">
+            <table class="table table-striped" id="alerts-table">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Tiny ID</th>
+                        <th>Status</th>
+                        <th>Acknowledged</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Data != null && Model.Data.Count > 0)
+                    {
+                        foreach (var alert in Model.Data)
+                        {
+                            <tr>
+                                <td>@alert.TinyId</td>
+                                <td>@alert.Status</td>
+                                <td>@alert.Acknowledged</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="no-alerts">No alerts found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        function updateAlertsTable(alerts) {
+            var tableBody = '';
+            if (alerts && alerts.length > 0) {
+                for (var i = 0; i < alerts.length; i++) {
+                    var alert = alerts[i];
+                    var row = `
+                                <tr>
+                                    <td>${alert.tinyId}</td>
+                                    <td>${alert.status}</td>
+                                    <td>${alert.acknowledged}</td>
+                                </tr>`;
+                    tableBody += row;
+                }
+            } else {
+                tableBody = '<tr><td colspan="3" class="no-alerts">No alerts found.</td></tr>';
+            }
+            document.getElementById('alerts-table').innerHTML = tableBody;
+        }
+
+        function fetchAlerts() {
+            var xhr = new XMLHttpRequest();
+            var url = '/Alerts/Index';
+            url += '?_=' + new Date().getTime(); // Append a random query parameter
+            xhr.open('GET', url, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    updateAlertsTable(data);
+                }
+            };
+            xhr.send();
+        }
+
+        setInterval(fetchAlerts, 60000); // Refresh the data every 60 seconds
+
+        // Initial fetch on page load
+        fetchAlerts();
+    </script>
+</body>
+</html>
